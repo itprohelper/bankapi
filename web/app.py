@@ -132,3 +132,55 @@ class Add(Resource):
         updateAccount(username, cash+money)
 
         return jsonify(generateReturnDictionary(200, "Amount added succesfully to account"))
+
+class Transfer(Resource):
+    def post(self):
+        postedData = request.get_json()
+
+        username = postedData["username"]
+        password = postedData["password"]
+        to       = postedData["to"]
+        money    = postedData["amount"]
+
+        retJson, error = verifyCrendentials(username, password)
+
+        if error:
+            return jsonify(retJson)
+
+        cash = cashWithUser(username)
+        if cash<=0:
+            return jsonify(generateReturnDictionary(304, "You're out of money, please add or take a loan."))
+
+        if not UserExist(to):
+            return jsonify(generateReturnDictionary(301, "Receiver username is Invalid."))
+
+        cash_from = cashWithUser(username)
+        cash_to   = cashWithUser(to)
+        bank_cash = cashWithUser("BANK")
+
+        updateAccount("BANK", bank_cash+1)
+        updateAccount(to, cash_to + money-1)
+        updateAccount(username, cash_from-money)
+
+        return jsonify(generateReturnDictionary(200, "Amount transfered succesfully."))
+
+class Balance(Resource):
+    def post(self):
+        postedData = request.get_json()
+
+        username = postedData["username"]
+        password = postedData["password"]
+
+        retJson, error = verifyCrendentials(username, password)
+
+        if error:
+            return jsonify(retJson)
+
+        retJson = users.find({
+            "Username": username
+        },{
+            "Password": 0
+            "_id": 0
+        })[0]
+
+        return jsonify(retJson)
