@@ -11,7 +11,8 @@ db = client.BankAPI
 users = db["Users"]
 
 def UserExist(username):
-    if users.find({"Username":username}).count()==0:
+    #if users.find({"Username":username}).count()==0:
+    if db.users.count_documents({"Username": username}) == 0:
         return False
     else:
         return True
@@ -25,14 +26,15 @@ class Register(Resource):
 
         if UserExist(username):
             retJson = {
-                "status": "301"
+                "status": "301",
                 "msg": "Invalid Username"
             }
             return jsonify(retJson)
 
-        hashed_pw = bcrypt.hashpw(password.encode('uft8'), bcrypt.gensalt())
+        hashed_pw = bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
 
-        users.insert({
+        #users.insert({
+        db.users.insert_one({
             "Username": username,
             "Password": hashed_pw,
             "Own": 0,
@@ -50,30 +52,30 @@ def verifyPw(username, password):
     if not UserExist(username):
         return False
 
-    hashed_pw = users.find({
+    hashed_pw = db.users.find({
         "Username": username
     })[0]["Password"]
 
-    if bcrypt.hashpw(password.encode('utf8'), hashed_pw==hashed_pw):
+    if bcrypt.hashpw(password.encode('utf8'), hashed_pw)==hashed_pw:
         return True
     else:
         return False
 
 def cashWithUser(username):
-    cash = users.find({
+    cash = db.users.find({
         "Username": username
     })[0]["Own"]
     return cash
 
 def debtWithUser(username):
-    debt = users.find({
+    debt = db.users.find({
         "Username": username
     })[0]["Debt"]
     return debt
 
 def generateReturnDictionary(status, msg):
     retJson = {
-        "statu": status,
+        "status": status,
         "msg": msg
     }
     return retJson
@@ -92,7 +94,7 @@ def verifyCrendentials(username, password):
 
 #Update account functions
 def updateAccount(username, balance):
-    users.update({
+    db.users.update_one({
         "Username": username
     },{
         "$set":{
@@ -101,7 +103,7 @@ def updateAccount(username, balance):
     })
 
 def updateDebt(username, balance):
-    users.update({
+    db.users.update_one({
         "Username": username,
     },{
         "$set":{
@@ -176,10 +178,10 @@ class Balance(Resource):
         if error:
             return jsonify(retJson)
 
-        retJson = users.find({
+        retJson = db.users.find({
             "Username": username
         },{
-            "Password": 0
+            "Password": 0,
             "_id": 0
         })[0]
 
@@ -193,7 +195,7 @@ class TakeLoan(Resource):
         password = postedData["password"]
         money    = postedData["amount"]
 
-        retJson, password = verifyCrendentials(username, password)
+        retJson, error = verifyCrendentials(username, password)
 
         if error:
             return jsonify(retJson)

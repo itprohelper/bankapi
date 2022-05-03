@@ -1,4 +1,4 @@
 Flask
 flask-restful
-pymongod
+pymongo
 bcrypt

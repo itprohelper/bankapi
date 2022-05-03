@@ -6,7 +6,7 @@ services:
     ports:
       - "5000:5000"
     links:
-      - db:
+      - db
 
   db:
     build: ./db
