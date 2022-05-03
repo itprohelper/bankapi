@@ -227,8 +227,8 @@ class PayLoan(Resource):
 
         debt = debtWithUser(username)
 
-        updateAccount(username, cash-money)
-        updateAccount(username, debt-money)
+        updateAccount(username, cash - money)
+        updateDebt(username, debt - money)
 
         return jsonify(generateReturnDictionary(200, "You've succesfully paid your loan"))
 
